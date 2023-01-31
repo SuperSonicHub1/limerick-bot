@@ -42,7 +42,12 @@ DIPTHONGS = {'ɔɪ', 'eə', 'ɜʉ', 'ɑe', 'æɪ', 'ʉu', 'äʉ', 'ɛə', 'äe',
 # DIPTHONGS = set(AAVE_DIPTHONGS + GENERAL_AMERICAN_DIPTHONGS + GENERAL_AUSTRALIAN_DIPTHONGS + MANCHESTER_ENGLISH_DIPTHONGS)
 # print(DIPTHONGS)
 # print(DIPTHONGS.issuperset({"oʊ", "aʊ", "aɪ", "eɪ", "ɔɪ"}))
-thongs = '|'.join(list(DIPTHONGS) + ft.all_segs_matching_fts({'syl': 1}))
+
+# Apparently, I'm creating a comprehensive list of IPA vowels now
+random_vowels = [
+	'ɝ', # staffordshire's /ˈstæfɝdʃɝz/
+]
+thongs = '|'.join(list(DIPTHONGS) + ft.all_segs_matching_fts({'syl': 1}) + random_vowels)
 ENGLISH_IPA_VOWELS = re.compile(r'(' + thongs + '):?', re.UNICODE)
 
 def split_before(string: str, separator: str) -> list[str]:
@@ -102,8 +107,8 @@ def destructure_syllables(parts: list[str]) -> list[str]:
 	for part in parts:
 		if DEBUG: print('Initial part', part)
 		vowels = sorted(ENGLISH_IPA_VOWELS.finditer(part), key=lambda group: group.start(0), reverse=True)
-		if len(vowels) == 1:
-			if DEBUG: print('One vowel')
+		if len(vowels) <= 1:
+			if DEBUG: print('One or no vowels')
 			return_value.append(part)
 			continue
 
@@ -222,7 +227,7 @@ def destructure_syllables(parts: list[str]) -> list[str]:
 class Pronunciation:
 	pronunciation: str
 	original_pronunciation: str
-	syllables = list[str]
+	syllables: list[str]
 
 	def __init__(self, pronunciation: str) -> None:
 		self.original_pronunciation = pronunciation
@@ -250,20 +255,30 @@ class Pronunciation:
 				final += SYLLABLE_BREAK
 			final += syllable
 
-		return f'/{final}/'
+		return final
+
+	def __repr__(self) -> str:
+		return f'<Pronunciation {self.pronunciation=}, {self.original_pronunciation=}, {self.syllables=}>'
 
 	def __str__(self) -> str:
-		return f'{self.pronunciation} (from {self.original_pronunciation})'
+		return f'/{self.pronunciation}/ (from {self.original_pronunciation})'
+	
+	def __hash__(self) -> int:
+		return hash(self.pronunciation)
 
 if __name__ == "__main__":
 	tuba = '/ˈtu.bə/'
 	psych = '/saɪˈkɒlədʒɪ/'
 	secondary = '/ˈsɛkənˌdɛɹi/'
 	pneumonoultramicroscopicsilicovolcanoconiosis = '/njuːˌmɒ.nəʊ.ʌl.tɹə.maɪ.kɹəʊˈskɒ.pɪkˌsɪ.lɪ.kəʊ.vɒl.keɪ.nəʊ.kəʊ.niˈəʊ.sɪs/'
-	print(Pronunciation(psych))
-	print(Pronunciation(tuba))
-	print(Pronunciation(secondary))
-	print(Pronunciation(pneumonoultramicroscopicsilicovolcanoconiosis))
+	cheeseburgers = "/ˈtʃizbɝɡɝz/"
+	staffordshires = "/ˈstæfɝdʃɝz/"
+	# print(Pronunciation(psych))
+	# print(Pronunciation(tuba))
+	# print(Pronunciation(secondary))
+	# print(Pronunciation(pneumonoultramicroscopicsilicovolcanoconiosis))
+	# print(Pronunciation(cheeseburgers))
+	# print(Pronunciation(staffordshires))
 
 # All single-consonant phonemes except /ŋ/
 # ʒɪ
